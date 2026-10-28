@@ -45,13 +45,7 @@ stroke.Transparency = 0.3
 stroke.Thickness = 1.5
 stroke.Parent = main
 
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(32, 26, 56)),
-	ColorSequenceKeypoint.new(1, BG)
-})
-gradient.Rotation = 45
-gradient.Parent = main
+
 
 -- Верхняя панель для перетаскивания
 local topBar = Instance.new("Frame")
@@ -195,14 +189,6 @@ search.Parent = main
 Instance.new("UICorner", search).CornerRadius = UDim.new(0, 12)
 
 
-local searchGradient = Instance.new("UIGradient")
-
-searchGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(164, 104, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(101, 74, 235))
-})
-
-searchGradient.Parent = search
 
 
 -- Статус поиска
