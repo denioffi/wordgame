@@ -282,7 +282,7 @@ local function findWords()
 	local text = string.lower(input.Text)
 	text = text:gsub("^%s+", ""):gsub("%s+$", "")
 
-	local firstLetter = utf8.sub(text, 1, 1)
+	local firstLetter = utf8.char(utf8.codepoint(text, 1, 1))
 
 	if not firstLetter then
 		status.Text = "Введи русскую букву!"
