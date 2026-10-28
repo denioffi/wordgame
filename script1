@@ -288,43 +288,17 @@ local dictionary = {
 }
 
 -- Таблица преобразования заглавных русских букв
-local upperToLower = {
-	["А"] = "а", ["Б"] = "б", ["В"] = "в",
-	["Г"] = "г", ["Д"] = "д", ["Е"] = "е",
-	["Ё"] = "ё", ["Ж"] = "ж", ["З"] = "з",
-	["И"] = "и", ["Й"] = "й", ["К"] = "к",
-	["Л"] = "л", ["М"] = "м", ["Н"] = "н",
-	["О"] = "о", ["П"] = "п", ["Р"] = "р",
-	["С"] = "с", ["Т"] = "т", ["У"] = "у",
-	["Ф"] = "ф", ["Х"] = "х", ["Ц"] = "ц",
-	["Ч"] = "ч", ["Ш"] = "ш", ["Щ"] = "щ",
-	["Ъ"] = "ъ", ["Ы"] = "ы", ["Ь"] = "ь",
-	["Э"] = "э", ["Ю"] = "ю", ["Я"] = "я"
+local lowerToUpper = {
+	["а"]="А", ["б"]="Б", ["в"]="В", ["г"]="Г",
+	["д"]="Д", ["е"]="Е", ["ё"]="Ё", ["ж"]="Ж",
+	["з"]="З", ["и"]="И", ["й"]="Й", ["к"]="К",
+	["л"]="Л", ["м"]="М", ["н"]="Н", ["о"]="О",
+	["п"]="П", ["р"]="Р", ["с"]="С", ["т"]="Т",
+	["у"]="У", ["ф"]="Ф", ["х"]="Х", ["ц"]="Ц",
+	["ч"]="Ч", ["ш"]="Ш", ["щ"]="Щ", ["ъ"]="Ъ",
+	["ы"]="Ы", ["ь"]="Ь", ["э"]="Э", ["ю"]="Ю",
+	["я"]="Я"
 }
-
-local function clearList()
-	for _, child in ipairs(list:GetChildren()) do
-		if child:IsA("TextLabel") then
-			child:Destroy()
-		end
-	end
-end
-
--- Получение первой буквы UTF-8 без utf8.char/codepoint
-local function getFirstLetter(text)
-	-- Убираем пробелы по краям
-	text = text:gsub("^%s+", ""):gsub("%s+$", "")
-
-	if text == "" then
-		return nil
-	end
-
-	-- Русская буква занимает два байта в UTF-8
-	local firstTwoBytes = text:sub(1, 2)
-	local firstLetter = upperToLower[firstTwoBytes] or firstTwoBytes
-
-	return firstLetter
-end
 
 local function findWords()
 	local firstLetter = getFirstLetter(input.Text)
@@ -335,25 +309,24 @@ local function findWords()
 		return
 	end
 
-	-- Проверяем, что введена русская буква
-	if not firstLetter:match("^[а-яё]$") then
+	-- Проверяем букву через таблицу, а не через match
+	if not lowerToUpper[firstLetter] then
 		clearList()
-		status.Text = "Введи одну русскую букву от А до Я"
+		status.Text = "Введи русскую букву от А до Я"
 		return
 	end
 
 	local words = dictionary[firstLetter]
 
+	clearList()
+
 	if not words then
-		clearList()
 		status.Text = "Для этой буквы слов пока нет"
 		return
 	end
 
-	clearList()
-
 	status.Text = "Найдено: " .. #words
-		.. "  •  Буква: " .. firstLetter:upper()
+		.. "  •  Буква: " .. lowerToUpper[firstLetter]
 
 	for i, word in ipairs(words) do
 		local item = Instance.new("TextLabel")
@@ -362,7 +335,8 @@ local function findWords()
 		item.BackgroundColor3 = BG
 		item.BackgroundTransparency = 0.15
 		item.BorderSizePixel = 0
-		item.Text = "   " .. firstLetter:upper() .. "   •   " .. tostring(word)
+		item.Text = "   " .. lowerToUpper[firstLetter]
+			.. "   •   " .. tostring(word)
 		item.TextColor3 = WHITE
 		item.TextSize = 14
 		item.Font = Enum.Font.GothamMedium
@@ -370,35 +344,10 @@ local function findWords()
 		item.LayoutOrder = i
 		item.Parent = list
 
-		Instance.new("UICorner", item).CornerRadius = UDim.new(0, 8)
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = item
 	end
 
 	list.CanvasPosition = Vector2.zero
 end
-
--- Поиск кнопкой
-search.Activated:Connect(findWords)
-
--- Поиск нажатием Enter
-input.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		findWords()
-	end
-end)
-
--- Анимация появления
-main.Size = UDim2.fromOffset(400, 450)
-main.BackgroundTransparency = 1
-
-TweenService:Create(
-	main,
-	TweenInfo.new(
-		0.35,
-		Enum.EasingStyle.Back,
-		Enum.EasingDirection.Out
-	),
-	{
-		Size = UDim2.fromOffset(440, 490),
-		BackgroundTransparency = 0
-	}
-):Play()
