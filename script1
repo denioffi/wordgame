@@ -1,7 +1,6 @@
---// RUSSIAN WORD FINDER GUI
+--// RUSSIAN WORD FINDER GUI (кнопки букв)
+--// Без словаря — добавь слова в dictionary
 --// Перетаскивание мышкой и пальцем
---// Enter = поиск слов
---// Словарь добавляется отдельно
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -51,6 +50,7 @@ local dictionary = {
 	["ю"] = {"юбка","юла","юность","юмор","ювелир","юрист","ювелирный","ювелирка","юг","южанин","южанка","юго-восток","юго-запад","юдоль","юз","юзер","юзабилити","юка","юкола","юлит","юлить","юморист","юмористка","юмористический","юнга","юнец","юннат","юннатка","юннатский","юнкер","юнкерский","юнкор","юнкоровский","юноша","юношество","юношеский","юпитер","юристка","юрисконсульт","юрисдикция","юрта","юркий","юркость","юрьевец","юстиция","ют","ютиться"},
 	["я"] = {"яблоко","язык","яхта","ягода","ящерица","якорь","январь","ястреб","яблоня","яблоневый","яблочко","яблочник","яблочный","явление","явка","явор","явь","ягнёнок","ягодка","ягодник","ягодный","яд","ядро","ядовитость","ядовитый","ядозуб","язва","язвительность","язвенник","язвительный","язик","языкознание","языковед","языковедение","языковой","язычок","яичница","яйцо","яйцеклетка","як","якобы","якорёк","якорный","яма","ямка","ямщик","янтарь","янтарный","японец","японка","японский","ярмарка","яркость","ярлык","ярмо","ярость","ярус","ясень","ясновидение","ясность","яснотка","ясный","яство","ястребёнок","яхтсмен","ящик","ящичек"}
 }
+
 -- Удаляем старый GUI
 local oldGui = playerGui:FindFirstChild("RussianWordFinder")
 if oldGui then
@@ -74,8 +74,8 @@ gui.Parent = playerGui
 -- Главная панель
 local main = Instance.new("Frame")
 main.Name = "Main"
-main.Size = UDim2.fromOffset(440, 490)
-main.Position = UDim2.new(0.5, -220, 0.5, -245)
+main.Size = UDim2.fromOffset(440, 600)
+main.Position = UDim2.new(0.5, -220, 0.5, -300)
 main.BackgroundColor3 = BG
 main.BorderSizePixel = 0
 main.ClipsDescendants = true
@@ -117,7 +117,7 @@ local subtitle = Instance.new("TextLabel")
 subtitle.Size = UDim2.new(1, -44, 0, 25)
 subtitle.Position = UDim2.fromOffset(22, 55)
 subtitle.BackgroundTransparency = 1
-subtitle.Text = "Поиск русских слов по первой букве"
+subtitle.Text = "Нажми букву — увидишь слова"
 subtitle.TextColor3 = MUTED
 subtitle.TextSize = 13
 subtitle.Font = Enum.Font.Gotham
@@ -199,59 +199,69 @@ UserInputService.InputEnded:Connect(function(inputObject)
 	end
 end)
 
--- Поле ввода
-local input = Instance.new("TextBox")
-input.Name = "LetterInput"
-input.Size = UDim2.new(1, -44, 0, 48)
-input.Position = UDim2.fromOffset(22, 95)
-input.BackgroundColor3 = PANEL
-input.BorderSizePixel = 0
-input.PlaceholderText = "Введи букву, например А..."
-input.PlaceholderColor3 = MUTED
-input.Text = ""
-input.TextColor3 = WHITE
-input.TextSize = 16
-input.Font = Enum.Font.GothamMedium
-input.ClearTextOnFocus = false
-input.TextXAlignment = Enum.TextXAlignment.Left
-input.ZIndex = 3
-input.Parent = main
+-- ============================================================
+-- ПАНЕЛЬ БУКВ
+-- ============================================================
+local lettersPanel = Instance.new("ScrollingFrame")
+lettersPanel.Name = "LettersPanel"
+lettersPanel.Size = UDim2.new(1, -44, 0, 150)
+lettersPanel.Position = UDim2.fromOffset(22, 95)
+lettersPanel.BackgroundColor3 = PANEL
+lettersPanel.BorderSizePixel = 0
+lettersPanel.ScrollBarThickness = 4
+lettersPanel.ScrollBarImageColor3 = PURPLE
+lettersPanel.CanvasSize = UDim2.new(0, 0, 0, 0)
+lettersPanel.AutomaticCanvasSize = Enum.AutomaticSize.Y
+lettersPanel.ScrollingDirection = Enum.ScrollingDirection.Y
+lettersPanel.Parent = main
 
-Instance.new("UICorner", input).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", lettersPanel).CornerRadius = UDim.new(0, 12)
 
-local inputPadding = Instance.new("UIPadding")
-inputPadding.PaddingLeft = UDim.new(0, 12)
-inputPadding.PaddingRight = UDim.new(0, 12)
-inputPadding.Parent = input
+local lettersPadding = Instance.new("UIPadding")
+lettersPadding.PaddingTop = UDim.new(0, 8)
+lettersPadding.PaddingBottom = UDim.new(0, 8)
+lettersPadding.PaddingLeft = UDim.new(0, 8)
+lettersPadding.PaddingRight = UDim.new(0, 8)
+lettersPadding.Parent = lettersPanel
 
-local inputStroke = Instance.new("UIStroke")
-inputStroke.Color = PURPLE
-inputStroke.Transparency = 0.55
-inputStroke.Parent = input
+-- Сетка кнопок (по 7 в ряд)
+local grid = Instance.new("UIGridLayout")
+grid.CellSize = UDim2.fromOffset(48, 34)
+grid.CellPadding = UDim2.fromOffset(6, 6)
+grid.SortOrder = Enum.SortOrder.LayoutOrder
+grid.Parent = lettersPanel
 
--- Кнопка поиска
-local search = Instance.new("TextButton")
-search.Name = "SearchButton"
-search.Size = UDim2.new(1, -44, 0, 43)
-search.Position = UDim2.fromOffset(22, 153)
-search.BackgroundColor3 = PURPLE
-search.BorderSizePixel = 0
-search.Text = "НАЙТИ СЛОВА  →"
-search.TextColor3 = WHITE
-search.TextSize = 15
-search.Font = Enum.Font.GothamBold
-search.ZIndex = 3
-search.Parent = main
+-- Список всех русских букв (строчные)
+local letters = {
+	"а","б","в","г","д","е","ё","ж",
+	"з","и","й","к","л","м","н","о",
+	"п","р","с","т","у","ф","х","ц",
+	"ч","ш","щ","ъ","ы","ь","э","ю","я"
+}
 
-Instance.new("UICorner", search).CornerRadius = UDim.new(0, 12)
+-- Таблица: строчная → заглавная
+local lowerToUpper = {}
+for _, l in ipairs(letters) do
+	lowerToUpper[l] = string.upper(l)
+end
+-- на случай, если string.upper не сработает с кириллицей
+local manualUpper = {
+	["а"]="А",["б"]="Б",["в"]="В",["г"]="Г",["д"]="Д",["е"]="Е",["ё"]="Ё",["ж"]="Ж",
+	["з"]="З",["и"]="И",["й"]="Й",["к"]="К",["л"]="Л",["м"]="М",["н"]="Н",["о"]="О",
+	["п"]="П",["р"]="Р",["с"]="С",["т"]="Т",["у"]="У",["ф"]="Ф",["х"]="Х",["ц"]="Ц",
+	["ч"]="Ч",["ш"]="Ш",["щ"]="Щ",["ъ"]="Ъ",["ы"]="Ы",["ь"]="Ь",["э"]="Э",["ю"]="Ю",["я"]="Я"
+}
+for k, v in pairs(manualUpper) do
+	lowerToUpper[k] = v
+end
 
 -- Статус поиска
 local status = Instance.new("TextLabel")
 status.Name = "Status"
 status.Size = UDim2.new(1, -44, 0, 28)
-status.Position = UDim2.fromOffset(22, 207)
+status.Position = UDim2.fromOffset(22, 253)
 status.BackgroundTransparency = 1
-status.Text = "Введи букву и нажми Enter"
+status.Text = "Нажми любую букву"
 status.TextColor3 = MUTED
 status.TextSize = 13
 status.Font = Enum.Font.Gotham
@@ -261,8 +271,8 @@ status.Parent = main
 -- Список результатов
 local list = Instance.new("ScrollingFrame")
 list.Name = "WordsList"
-list.Size = UDim2.new(1, -44, 0, 222)
-list.Position = UDim2.fromOffset(22, 244)
+list.Size = UDim2.new(1, -44, 0, 285)
+list.Position = UDim2.fromOffset(22, 285)
 list.BackgroundColor3 = PANEL
 list.BorderSizePixel = 0
 list.ScrollBarThickness = 4
@@ -290,51 +300,6 @@ layout.Parent = list
 -- ЛОГИКА
 -- ============================================================
 
--- Таблица: заглавная русская → строчная
-local upperToLower = {
-	["А"]="а", ["Б"]="б", ["В"]="в", ["Г"]="г",
-	["Д"]="д", ["Е"]="е", ["Ё"]="ё", ["Ж"]="ж",
-	["З"]="з", ["И"]="и", ["Й"]="й", ["К"]="к",
-	["Л"]="л", ["М"]="м", ["Н"]="н", ["О"]="о",
-	["П"]="п", ["Р"]="р", ["С"]="с", ["Т"]="т",
-	["У"]="у", ["Ф"]="ф", ["Х"]="х", ["Ц"]="ц",
-	["Ч"]="ч", ["Ш"]="ш", ["Щ"]="щ", ["Ъ"]="ъ",
-	["Ы"]="ы", ["Ь"]="ь", ["Э"]="э", ["Ю"]="ю",
-	["Я"]="я"
-}
-
--- Таблица: строчная русская → заглавная
-local lowerToUpper = {
-	["а"]="А", ["б"]="Б", ["в"]="В", ["г"]="Г",
-	["д"]="Д", ["е"]="Е", ["ё"]="Ё", ["ж"]="Ж",
-	["з"]="З", ["и"]="И", ["й"]="Й", ["к"]="К",
-	["л"]="Л", ["м"]="М", ["н"]="Н", ["о"]="О",
-	["п"]="П", ["р"]="Р", ["с"]="С", ["т"]="Т",
-	["у"]="У", ["ф"]="Ф", ["х"]="Х", ["ц"]="Ц",
-	["ч"]="Ч", ["ш"]="Ш", ["щ"]="Щ", ["ъ"]="Ъ",
-	["ы"]="Ы", ["ь"]="Ь", ["э"]="Э", ["ю"]="Ю",
-	["я"]="Я"
-}
-
--- Получить первую букву строки в нижнем регистре (надёжно для кириллицы)
-local function getFirstLetter(text)
-	text = text:gsub("^%s+", ""):gsub("%s+$", "")
-	if text == "" then
-		return nil
-	end
-	local ch = string.sub(text, 1, 1)
-	-- заглавная русская → строчная
-	if upperToLower[ch] then
-		return upperToLower[ch]
-	end
-	-- уже строчная русская
-	if lowerToUpper[ch] then
-		return ch
-	end
-	-- что-то другое (латиница, цифра, символ)
-	return nil
-end
-
 -- Очистить список слов
 local function clearList()
 	for _, child in ipairs(list:GetChildren()) do
@@ -357,29 +322,21 @@ local function dedupe(arr)
 	return result
 end
 
--- Основная функция поиска
-local function findWords()
-	local firstLetter = getFirstLetter(input.Text)
-
-	if not firstLetter then
-		clearList()
-		status.Text = "Введи русскую букву от А до Я"
-		return
-	end
-
-	local words = dictionary[firstLetter]
-
+-- Показать слова для буквы
+local function showWords(letter)
 	clearList()
 
+	local words = dictionary[letter]
+	local upper = lowerToUpper[letter] or letter
+
 	if not words or #words == 0 then
-		status.Text = "Для буквы «" .. lowerToUpper[firstLetter] .. "» слов пока нет"
+		status.Text = "Для буквы «" .. upper .. "» слов пока нет"
 		return
 	end
 
 	words = dedupe(words)
 
-	status.Text = "Найдено: " .. #words
-		.. "  •  Буква: " .. lowerToUpper[firstLetter]
+	status.Text = "Найдено: " .. #words .. "  •  Буква: " .. upper
 
 	for i, word in ipairs(words) do
 		local item = Instance.new("TextLabel")
@@ -388,8 +345,7 @@ local function findWords()
 		item.BackgroundColor3 = BG
 		item.BackgroundTransparency = 0.15
 		item.BorderSizePixel = 0
-		item.Text = "   " .. lowerToUpper[firstLetter]
-			.. "   •   " .. tostring(word)
+		item.Text = "   " .. upper .. "   •   " .. tostring(word)
 		item.TextColor3 = WHITE
 		item.TextSize = 14
 		item.Font = Enum.Font.GothamMedium
@@ -405,20 +361,30 @@ local function findWords()
 	list.CanvasPosition = Vector2.zero
 end
 
--- Привязки: кнопка и Enter
-search.Activated:Connect(findWords)
+-- Создаём кнопки букв
+for i, letter in ipairs(letters) do
+	local btn = Instance.new("TextButton")
+	btn.Name = "Letter_" .. letter
+	btn.BackgroundColor3 = BG
+	btn.BackgroundTransparency = 0.15
+	btn.BorderSizePixel = 0
+	btn.Text = lowerToUpper[letter] or letter
+	btn.TextColor3 = WHITE
+	btn.TextSize = 16
+	btn.Font = Enum.Font.GothamBold
+	btn.LayoutOrder = i
+	btn.Parent = lettersPanel
 
-input.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		findWords()
-	end
-end)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = btn
 
--- Дополнительно: Enter работает даже вне фокуса поля
-UserInputService.InputBegan:Connect(function(inputObject, processed)
-	if processed then return end
-	if inputObject.KeyCode == Enum.KeyCode.Return
-		or inputObject.KeyCode == Enum.KeyCode.KeypadEnter then
-		findWords()
-	end
-end)
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = PURPLE
+	btnStroke.Transparency = 0.6
+	btnStroke.Parent = btn
+
+	btn.Activated:Connect(function()
+		showWords(letter)
+	end)
+end
