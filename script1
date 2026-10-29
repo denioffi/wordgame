@@ -1,7 +1,6 @@
---// RUSSIAN WORD FINDER (ФИНАЛ)
+--// RUSSIAN WORD FINDER (КНОПКА ПОИСКА)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -95,7 +94,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -75, 0, 42)
 title.Position = UDim2.fromOffset(22, 14)
 title.BackgroundTransparency = 1
-title.Text = "✦  AUTO FINDER"
+title.Text = "✦  WORD FINDER"
 title.TextColor3 = WHITE
 title.TextSize = 20
 title.Font = Enum.Font.GothamBold
@@ -161,22 +160,22 @@ currentLetterLabel.ZIndex = 3
 currentLetterLabel.Parent = main
 Instance.new("UICorner", currentLetterLabel).CornerRadius = UDim.new(0, 12)
 
--- Кнопка Старт/Стоп
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Name = "ToggleButton"
-toggleBtn.Size = UDim2.new(1, -44, 0, 45)
-toggleBtn.Position = UDim2.fromOffset(22, 125)
-toggleBtn.BackgroundColor3 = GREEN
-toggleBtn.BorderSizePixel = 0
-toggleBtn.Text = "▶ СТАРТ"
-toggleBtn.TextColor3 = WHITE
-toggleBtn.TextSize = 16
-toggleBtn.Font = Enum.Font.GothamBold
-toggleBtn.ZIndex = 3
-toggleBtn.Parent = main
-Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 12)
+-- Кнопка ПОЛУЧИТЬ СЛОВО
+local getWordBtn = Instance.new("TextButton")
+getWordBtn.Name = "GetWordButton"
+getWordBtn.Size = UDim2.new(1, -44, 0, 45)
+getWordBtn.Position = UDim2.fromOffset(22, 125)
+getWordBtn.BackgroundColor3 = GREEN
+getWordBtn.BorderSizePixel = 0
+getWordBtn.Text = "▶ ПОЛУЧИТЬ СЛОВО"
+getWordBtn.TextColor3 = WHITE
+getWordBtn.TextSize = 15
+getWordBtn.Font = Enum.Font.GothamBold
+getWordBtn.ZIndex = 3
+getWordBtn.Parent = main
+Instance.new("UICorner", getWordBtn).CornerRadius = UDim.new(0, 12)
 
--- Кнопка Сменить слово
+-- Кнопка Другое слово
 local changeWordBtn = Instance.new("TextButton")
 changeWordBtn.Name = "ChangeWordButton"
 changeWordBtn.Size = UDim2.new(1, -44, 0, 40)
@@ -191,13 +190,28 @@ changeWordBtn.ZIndex = 3
 changeWordBtn.Parent = main
 Instance.new("UICorner", changeWordBtn).CornerRadius = UDim.new(0, 12)
 
+-- Кнопка СБРОС
+local resetBtn = Instance.new("TextButton")
+resetBtn.Name = "ResetButton"
+resetBtn.Size = UDim2.new(1, -44, 0, 35)
+resetBtn.Position = UDim2.fromOffset(22, 226)
+resetBtn.BackgroundColor3 = RED
+resetBtn.BorderSizePixel = 0
+resetBtn.Text = "🗑 СБРОС (Забыть слова)"
+resetBtn.TextColor3 = WHITE
+resetBtn.TextSize = 13
+resetBtn.Font = Enum.Font.GothamBold
+resetBtn.ZIndex = 3
+resetBtn.Parent = main
+Instance.new("UICorner", resetBtn).CornerRadius = UDim.new(0, 12)
+
 -- Статус
 local status = Instance.new("TextLabel")
 status.Name = "Status"
-status.Size = UDim2.new(1, -44, 0, 28)
-status.Position = UDim2.fromOffset(22, 225)
+status.Size = UDim2.new(1, -44, 0, 24)
+status.Position = UDim2.fromOffset(22, 268)
 status.BackgroundTransparency = 1
-status.Text = "Нажми СТАРТ для запуска"
+status.Text = "Нажми кнопку для поиска"
 status.TextColor3 = MUTED
 status.TextSize = 13
 status.Font = Enum.Font.Gotham
@@ -207,8 +221,8 @@ status.Parent = main
 -- Список результатов
 local list = Instance.new("ScrollingFrame")
 list.Name = "WordsList"
-list.Size = UDim2.new(1, -44, 0, 245)
-list.Position = UDim2.fromOffset(22, 255)
+list.Size = UDim2.new(1, -44, 0, 195)
+list.Position = UDim2.fromOffset(22, 295)
 list.BackgroundColor3 = PANEL
 list.BorderSizePixel = 0
 list.ScrollBarThickness = 4
@@ -235,12 +249,9 @@ layout.Parent = list
 -- ЛОГИКА
 -- ============================================================
 
-local isRunning = false
 local usedWords = {} 
 local currentLetter = "" 
-local lastFingerprint = ""
 
--- Очистка визуального списка
 local function clearList()
 	for _, child in ipairs(list:GetChildren()) do
 		if child:IsA("TextLabel") then child:Destroy() end
@@ -268,7 +279,6 @@ local function giveWord(letter)
 	if letter == "" then return end
 
 	local words = dictionary[letter]
-	
 	if not words or #words == 0 then
 		status.Text = "Нет слов на «" .. letter .. "»"
 		return
@@ -289,23 +299,9 @@ local function giveWord(letter)
 	local randomWord = availableWords[1]
 	usedWords[randomWord] = true
 
+	clearList() -- Очищаем прошлое слово
 	addWordToList(randomWord, letter)
 	status.Text = "Слово на «" .. letter .. "» выдано"
-end
-
-local function getRoundFingerprint()
-	local wordTiles = playerGui:FindFirstChild("WordTiles", true)
-	if not wordTiles then return nil end
-	local fingerprint = ""
-	for _, tile in ipairs(wordTiles:GetChildren()) do
-		if tile.Name:match("^Letter%d+$") then
-			local glyph = tile:FindFirstChild("Glyph")
-			if glyph and glyph:IsA("TextLabel") then
-				fingerprint = fingerprint .. tile.Name .. ":" .. glyph.Text .. "|"
-			end
-		end
-	end
-	return fingerprint
 end
 
 local function getCurrentLetterFromScreen()
@@ -319,59 +315,31 @@ local function getCurrentLetterFromScreen()
 	return ""
 end
 
-local checkConnection = nil
-
-local function startChecking()
-	if isRunning then return end
-	isRunning = true
-	toggleBtn.Text = "⏹ СТОП"
-	toggleBtn.BackgroundColor3 = RED
-	status.Text = "Ожидание нового раунда..."
-	lastFingerprint = ""
-	
-	-- СБРОС ПАМЯТИ И ЭКРАНА ПРИ СТАРТЕ
-	usedWords = {} 
-	clearList()
-
-	checkConnection = RunService.Heartbeat:Connect(function()
-		local fingerprint = getRoundFingerprint()
-		if not fingerprint or fingerprint == "" then return end
-
-		if fingerprint ~= lastFingerprint then
-			lastFingerprint = fingerprint
-			local newLetter = getCurrentLetterFromScreen()
-			
-			if newLetter ~= "" then
-				currentLetter = newLetter
-				currentLetterLabel.Text = "Буква: " .. newLetter
-				
-				giveWord(newLetter)
-			end
-		end
-	end)
-end
-
-local function stopChecking()
-	isRunning = false
-	toggleBtn.Text = "▶ СТАРТ"
-	toggleBtn.BackgroundColor3 = GREEN
-	status.Text = "Остановлено"
-	if checkConnection then
-		checkConnection:Disconnect()
-		checkConnection = nil
+-- Обработчик кнопки "ПОЛУЧИТЬ СЛОВО"
+getWordBtn.Activated:Connect(function()
+	local letter = getCurrentLetterFromScreen()
+	if letter == "" then
+		status.Text = "Буква не найдена на экране!"
+		return
 	end
-end
-
-toggleBtn.Activated:Connect(function()
-	if isRunning then stopChecking() else startChecking() end
+	
+	currentLetter = letter
+	currentLetterLabel.Text = "Буква: " .. letter
+	giveWord(currentLetter)
 end)
 
 -- Обработчик кнопки "ДРУГОЕ СЛОВО"
 changeWordBtn.Activated:Connect(function()
 	if currentLetter == "" then
-		status.Text = "Сначала дождись буквы!"
+		status.Text = "Сначала нажми 'ПОЛУЧИТЬ СЛОВО'!"
 		return
 	end
-	-- Выдаем новое слово на текущую букву
 	giveWord(currentLetter)
+end)
+
+-- Обработчик кнопки "СБРОС"
+resetBtn.Activated:Connect(function()
+	usedWords = {} -- Очищаем память
+	clearList()    -- Очищаем экран
+	status.Text = "Память очищена. Все слова доступны снова."
 end)
